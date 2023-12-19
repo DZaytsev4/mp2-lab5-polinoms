@@ -2,9 +2,12 @@
 #include "THeadList.h"
 #include "TMonom.h"
 #include <string>
+#include <vector>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
 
-const int nonDisplayedZeros = 4; // Количество неотображаемых нулей при выводе коэффициента полинома
-								 // Кол-во символов после запятой = 6 - nonDisplayedZeros
+const int nonDisplayedZeros = 4; 
 
 
 class TPolinom : public THeadList<TMonom>
@@ -18,72 +21,156 @@ public:
 
 	// дополнительно можно реализовать:
 	void AddMonom(TMonom newMonom); // добавление монома
-	TPolinom MultMonom(TMonom monom); // умножение мономов
 	TPolinom AddPolinom(TPolinom& other); // добавление полинома
-	TPolinom operator*(double coef); // умножение полинома на число
-	TPolinom operator* (TPolinom& other); // умножение полиномов
-	bool operator==(TPolinom& other); // сравнение полиномов на равенство
 	string ToString(); // перевод в строку
 };
 
 TPolinom::TPolinom() :THeadList<TMonom>::THeadList()
 {
-
+    length = 0;
 }
 
 TPolinom::TPolinom(TPolinom& other)
 {
-
+	other.Reset();
+	for (int i = 0; i < other.length; i++) {
+		AddMonom(other.pCurrent->value);
+		other.GoNext();
+	}
 }
 
 TPolinom::TPolinom(string str)
 {	
-	
+    stringstream ss(str);
+    char c;
+    double coef;
+    int degX, degY, degZ;
+
+    while (ss >> coef) {
+        ss >> c; 
+        ss >> c; 
+        ss >> c; 
+        ss >> degX; 
+        ss >> c; 
+        ss >> c; 
+        ss >> c; 
+        ss >> degY; 
+        ss >> c; 
+        ss >> c; 
+        ss >> c; 
+        ss >> degZ; 
+
+        TMonom monom(coef, degX, degY, degZ);
+        AddMonom(monom);
+    }
 }
 
 TPolinom& TPolinom::operator=(TPolinom& other)
 {
-	return *this;
+    if (this == &other)
+        return *this;
+
+    if (pFirst != nullptr) {
+        while (length > 0) {
+            DeleteFirst();
+        }
+    }
+
+    TNode<TMonom>* tmp = other.pFirst;
+    for (int i = 0; i < other.length; i++) {
+        AddMonom(tmp->value);
+        tmp = tmp->pNext;
+    }
+
+    return *this;
 }
 
 void TPolinom::AddMonom(TMonom m)
 {
-	
+    if (m.GetCoef() == 0)
+        return;
+
+    if (pFirst == nullptr)
+        InsertFirst(m);
+    else {
+        int i = 0;
+        Reset();
+        while (i <= length && pCurrent->value.GetIndex() != m.GetIndex() && pCurrent->value > m)
+        {
+            i++;
+            if (i == length) {
+                InsertLast(m);
+                return;
+            }
+
+            GoNext();
+        }
+
+        if (pCurrent->value.GetIndex() == m.GetIndex()) {
+            double coef = pCurrent->value.GetCoef() + m.GetCoef();
+            pCurrent->value.SetCoef(coef);
+            if (coef == 0)
+                DeleteCurrent();
+        }
+        else {
+            if (pCurrent == pFirst) {
+                InsertFirst(m);
+            }
+            else if (pPrevious != nullptr) {
+                pCurrent = pPrevious;
+                pPrevious = nullptr;
+                InsertCurrent(m);
+            }
+        }
+        Reset();
+    }
 }
 
-TPolinom TPolinom::MultMonom(TMonom monom)
-{
-	return *this;
-}
+
 
 TPolinom& TPolinom::operator+(TPolinom& other)
 {
-	return *this;
+    TPolinom result(*this);
+    return result;
 }
 
 TPolinom TPolinom::AddPolinom(TPolinom& other)
 {
-	return *this;
-}
-
-TPolinom TPolinom::operator*(double coef)
-{
-	return *this;
-}
-
-TPolinom TPolinom::operator*(TPolinom& other)
-{
-	return *this;
-}
-
-bool TPolinom::operator==(TPolinom& other)
-{
-	return false;
+    TPolinom res(*this);
+    return res;
 }
 
 
 string TPolinom::ToString()
 {
-	string result;
-	return result;
+    string result;
+    int sz = GetLength();
+    Reset();
+    for (int i = 0; i < sz; i++) {
+        TMonom a;
+        a = GetCurrentItem();
+        double A = a.GetCoef();
+        std::ostringstream oss;
+        oss << setprecision(5) << A;
+        int ind = a.GetIndex();
+        result += oss.str();
+        result += "*";
+        result += "x";
+        result += "^";
+        result += to_string((ind - ind % 100) / 100);
+        result += "*";
+        result += "y";
+        result += "^";
+        result += to_string(((ind % 100) - (ind % 10)) / 10);
+        result += "*";
+        result += "z";
+        result += "^";
+        result += to_string(ind % 10);
+        if (i != sz - 1)
+            result += " + ";
+        if (i < sz - 1)
+            GoNext();
+    }
+    Reset();
+    return result;
 }

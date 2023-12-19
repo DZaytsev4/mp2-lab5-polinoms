@@ -6,9 +6,15 @@ using namespace std;
 
 int main()
 {
-	setlocale(LC_ALL, "ru");
-
-	// здесь должна быть проверка работоспособности написанных вами классов
-	
-
+	setlocale(LC_ALL, "Russian");
+	cout << "¬ведите полином:" << endl;
+	string str;
+	cin >> str;
+	TPolinom p1(str);
+	cout << "¬аш полином: " << p1.ToString() << endl;
+	cout << "¬ведите полином:" << endl;
+	string str2;
+	cin >> str2;
+	TPolinom p2(str2);
+	cout << "¬аш полином: " << p2.ToString() << endl;
 }
